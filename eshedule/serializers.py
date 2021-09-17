@@ -109,6 +109,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class WorkoutSerializer(serializers.ModelSerializer):
     hall = HallSerializer(many=False)
+    club = ClubSerializer(many=False)
 
     class Meta:
         model = Workout
