@@ -3,12 +3,13 @@ from django.contrib.auth.models import AbstractUser
 
 # Пользователь
 class User(AbstractUser):
+    second_name = models.TextField(blank=True, null=True)                  # Отчество
     email = models.EmailField()                                            # email
     date_birth = models.DateField()                                        # Дата рождения
     sex = models.CharField(max_length=1, choices={('М', 'М'), ('Ж', 'Ж')}) # Пол
     is_coach = models.BooleanField(blank=True, null=True)                  # Это_тренер
     club = models.ManyToManyField("Club", through="SignUp")                # Секции
-    REQUIRED_FIELDS = ['first_name', 'last_name',  'date_birth', 'sex', 'is_coach']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'second_name', 'email', 'date_birth', 'sex', 'is_coach']
 
 
 # Сообщение

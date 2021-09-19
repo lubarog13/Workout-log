@@ -87,12 +87,12 @@ class PresenceUpdateAPIView(UpdateAPIView):
     queryset = Presence.objects.all()
 
 
-class TrainingsForUser(APIView):
+class SignUpsForUser(APIView):
 
     def get(self, request, user_id):
         trainings = SignUp.objects.filter(user=user_id)
         serializer = SignUpSerializer(trainings, many=True)
-        return Response({"Trainings: ", serializer.data})
+        return Response({"Sign_Ups":serializer.data})
 
 
 class BuildingListAPIView(ListAPIView):
@@ -114,13 +114,12 @@ class ClubListAPIView(ListAPIView):
     serializer_class = ClubSerializer
     queryset = Club.objects.all()
 
-
 class ClubForCoachAPIView(APIView):
 
     def get(self, request, coach_id):
         clubs = Club.objects.filter(coach=coach_id)
         serializer = ClubSerializer(clubs, many=True)
-        return Response({"Clubs: ", serializer.data})
+        return Response({"Clubs":serializer.data})
 
 
 class ClubsInBuildingAPIView(APIView):
@@ -128,7 +127,7 @@ class ClubsInBuildingAPIView(APIView):
     def get(self, request, building_id):
         clubs = Club.objects.filter(building=building_id)
         serializer = ClubSerializer(clubs, many=True)
-        return Response({"Clubs: ", serializer.data})
+        return Response({"Clubs":serializer.data})
 
 
 class MessagesForUserAPiView(APIView):
@@ -136,7 +135,7 @@ class MessagesForUserAPiView(APIView):
     def get(self, request, user_id):
         messages = Message.objects.filter(recipient=user_id)
         serializer = MessageSerializer(messages, many=True)
-        return Response({"Messages: ", serializer.data})
+        return Response({"Messages":serializer.data})
 
 
 class MessagesFromUserAPiView(APIView):
@@ -144,7 +143,7 @@ class MessagesFromUserAPiView(APIView):
     def get(self, request, user_id):
         messages = Message.objects.filter(sender=user_id)
         serializer = MessageSerializer(messages, many=True)
-        return Response({"Messages: ", serializer.data})
+        return Response({"Messages":serializer.data})
 
 
 class WorkoutsForCoach(APIView):
@@ -153,7 +152,7 @@ class WorkoutsForCoach(APIView):
         clubs = Club.objects.filter(coach=coach_id)
         workouts = Workout.objects.filter(Q(club__in=clubs) | Q(coach_replace=coach_id))
         serializer = WorkoutSerializer(workouts, many=True)
-        return Response({"Workouts: ", serializer.data})
+        return Response({"Workouts":serializer.data})
 
 
 class WorkoutsOnWeekForUser(APIView):
@@ -168,5 +167,17 @@ class WorkoutsOnWeekForUser(APIView):
     def get(self, request, user_id):
         workouts = Workout.objects.filter(start_time__gt=self.find_next_monday()).filter(user__id=user_id)
         serializer = WorkoutSerializer(workouts, many=True)
-        return Response({"Workouts: ", serializer.data})
-      
+        return Response({"Workouts": serializer.data})
+
+
+class HallsInBuildingAPIView(APIView):
+
+    def get(self, request, building_id):
+        halls = Hall.objects.filter(building=building_id)
+        serializer = HallSerializer(halls, many=True)
+        return Response({'Halls': serializer.data})
+
+
+class UserAPIView(RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
