@@ -8,6 +8,12 @@ class UserSimpleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class UserNotAllFieldsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'second_name', 'date_birth', 'sex', 'club']
+
+
 class MessageSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
@@ -61,12 +67,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'date_birth', 'sex', 'club']
+        fields = ['id', 'username', 'first_name', 'last_name', 'second_name', 'date_birth', 'sex', 'club']
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = UserSimpleSerializer(many=False)
-    recipient = UserSimpleSerializer(many=False)
+    sender = UserNotAllFieldsSerializer(many=False)
+    recipient = UserNotAllFieldsSerializer(many=False)
 
     class Meta:
         model = Message
@@ -74,7 +80,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class CoachSerializer(serializers.ModelSerializer):
-    user = UserSimpleSerializer(many=False)
+    user = UserNotAllFieldsSerializer(many=False)
 
     class Meta:
         model = Coach
@@ -100,7 +106,7 @@ class ClubSerializer(serializers.ModelSerializer):
 
 class SignUpSerializer(serializers.ModelSerializer):
     club = ClubSimpleSerializer(many=False)
-    user = UserSimpleSerializer(many=False)
+    user = UserNotAllFieldsSerializer(many=False)
 
     class Meta:
         model = SignUp
@@ -115,9 +121,18 @@ class WorkoutSerializer(serializers.ModelSerializer):
         model = Workout
         fields = "__all__"
 
+
 class PresenceSerializer(serializers.ModelSerializer):
-    user = UserSimpleSerializer(many=False)
+    user = UserNotAllFieldsSerializer(many=False)
     workout = WorkoutSerializer(many=False)
+
+    class Meta:
+        model = Presence
+        fields = "__all__"
+
+
+class PresenceSimplerSerializer(serializers.ModelSerializer):
+    user = UserNotAllFieldsSerializer(many=False)
 
     class Meta:
         model = Presence

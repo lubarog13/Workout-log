@@ -80,7 +80,7 @@ class Workout(models.Model):
 class Presence(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)       # Пользователь
     workout = models.ForeignKey(Workout, on_delete=models.CASCADE) # Тренировка
-    is_attend = models.BooleanField(default=False)                 # Присутствие
+    is_attend = models.BooleanField(blank=True, null=True)         # Присутствие
     reason = models.TextField(blank=True, null=True)               # Причина
     delay = models.BooleanField(default=False)                     # Опозание
     early_ret = models.BooleanField(default=False)                 # Ранний уход

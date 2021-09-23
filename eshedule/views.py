@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
-from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, DestroyAPIView
 from .serializers import *
 import datetime
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from rest_framework.response import Response
 from django.shortcuts import render
 
@@ -45,6 +45,16 @@ class WorkoutCreateAPIView(CreateAPIView):
 class PresenceCreateAPIView(CreateAPIView):
     serializer_class = PresenceSimpleSerializer
     queryset = Presence.objects.all()
+
+
+class CoachCreateAPIView(CreateAPIView):
+    serializer_class = CoachSimpleSerializer
+    queryset = Coach.objects.all()
+
+
+class CoachUpdateAPIView(UpdateAPIView):
+    serializer_class = CoachSimpleSerializer
+    queryset = Coach.objects.all()
 
 
 class UserUpdateAPIView(UpdateAPIView):
@@ -114,6 +124,7 @@ class ClubListAPIView(ListAPIView):
     serializer_class = ClubSerializer
     queryset = Club.objects.all()
 
+
 class ClubForCoachAPIView(APIView):
 
     def get(self, request, coach_id):
@@ -158,6 +169,13 @@ class WorkoutsForCoach(APIView):
 class WorkoutsOnWeekForUser(APIView):
 
     @staticmethod
+    def find_last_monday():
+        today = datetime.date.today()
+        idx = (today.weekday() + 1) % 7
+        mun = today - datetime.timedelta(7 - idx)
+        return mun
+
+    @staticmethod
     def find_next_monday():
        today = datetime.date.today()
        idx = (today.weekday()+1) % 7
@@ -165,7 +183,8 @@ class WorkoutsOnWeekForUser(APIView):
        return mun
 
     def get(self, request, user_id):
-        workouts = Workout.objects.filter(start_time__gt=self.find_next_monday()).filter(user__id=user_id)
+        l_m = self.find_last_monday()
+        workouts = Workout.objects.filter(start_time__lt=self.find_next_monday()).filter(start_time__gte=l_m).filter(user__id=user_id)
         serializer = WorkoutSerializer(workouts, many=True)
         return Response({"Workouts": serializer.data})
 
@@ -181,3 +200,66 @@ class HallsInBuildingAPIView(APIView):
 class UserAPIView(RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+
+class TodayWorkoutsForUser(APIView):
+
+    def get(self, request, user_id):
+        today = datetime.datetime(datetime.date.today().year, datetime.date.today().month, datetime.date.today().day, 0, 0, 0, 0)
+        tomorrow = today + datetime.timedelta(1)
+        workouts = Workout.objects.filter(start_time__gte=today).filter(start_time__lt=tomorrow).filter(user__id=user_id)
+        serializer = WorkoutSerializer(workouts, many=True)
+        return Response({"Workouts": serializer.data})
+
+class PresenceForWorkout(APIView):
+
+    def get(self, request, workout_id):
+        presences = Presence.objects.filter(workout=workout_id)
+        serializer = PresenceSimplerSerializer(presences, many=True)
+        return Response({"Presences": serializer.data})
+
+
+class PresencesOnDay(APIView):
+
+    def get(self, request, day, month, year):
+        presences = Presence.objects.filter(workout__start_time__day=day).filter(workout__start_time__month=month).filter(workout__start_time__year=year).order_by('user__last_name').order_by('user__first_name')
+        serializer = PresenceSerializer(presences, many=True)
+        return Response({"Presences": serializer.data})
+
+
+class WorkoutsOnDay(APIView):
+
+    def get(self, request, day, month, year):
+        workouts = Workout.objects.filter(start_time__day=day).filter(start_time__month=month).filter(start_time__year=year).order_by('start_time')
+        serializer = WorkoutSerializer(workouts, many=True)
+        return Response({"Workouts": serializer.data})
+
+
+class MessageDeleteAPIView(DestroyAPIView):
+    serializer_class = MessageSimpleSerializer
+    queryset = Message.objects.all()
+
+
+class PresenceCountInMonth(APIView):
+
+    def get(self, request, user_id, month):
+        presences = Presence.objects.filter(user=user_id).filter(workout__start_time__month=month).filter(is_attend=True).count()
+        return Response({"Count": presences})
+
+
+class MessageDetailAPIView(RetrieveAPIView):
+    serializer_class = MessageSerializer
+    queryset = Message.objects.all()
+
+
+class HallDetailAPIView(RetrieveAPIView):
+    serializer_class = HallSerializer
+    queryset = Hall.objects.all()
+
+
+class ClubsForTrainerAPIView(APIView):
+
+    def get(self, request, coach_id):
+        clubs = Club.objects.filter(coach=coach_id)
+        serializer = ClubSerializer(clubs, many=True)
+        return Response({'Clubs':serializer.data})
