@@ -16,8 +16,8 @@ urlpatterns = [
     path('user/<int:user_id>/week_workouts/', WorkoutsOnWeekForUser.as_view()),
     path('user/<int:user_id>/today_workouts/', TodayWorkoutsForUser.as_view()),
     path('workout/<int:workout_id>/presences/', PresenceForWorkout.as_view()),
-    path('workouts/<int:day>/<int:month>/<int:year>/', WorkoutsOnDay.as_view()),
-    path('presences/<int:day>/<int:month>/<int:year>/', PresencesOnDay.as_view()),
+    path('user/<int:user_id>/workouts/<int:day>/<int:month>/<int:year>/', WorkoutsOnDay.as_view()),
+    path('coach/<int:coach_id>/presences/<int:day>/<int:month>/<int:year>/', PresencesOnDay.as_view()),
     path('user/craete/', UserCreateAPIView.as_view()),
     path('club/create/', ClubCreateAPIView.as_view()),
     path('coach/create/', CoachCreateAPIView.as_view()),
@@ -36,5 +36,8 @@ urlpatterns = [
     path('message/<int:pk>/', MessageDetailAPIView.as_view()),
     path('hall/<int:pk>/', HallDetailAPIView.as_view()),
     path('coach/<int:coach_id>/clubs/', ClubForCoachAPIView.as_view()),
-    path('user/<int:user_id>/presences/count/<int:month>/', PresenceCountInMonth.as_view())
+    path('user/<int:user_id>/presences/count/<int:month>/', PresenceCountInMonth.as_view()),
+    path('user/<int:user_id>/workouts/presences/<int:month>/', PresencesInMonth.as_view()),
+    path('coach/<int:pk>/', CoachDetailAPIView.as_view()),
+    path('user/<int:user_id>/analysis/types/', PresencesCountForTypes.as_view())
 ]

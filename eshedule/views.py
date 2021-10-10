@@ -221,16 +221,16 @@ class PresenceForWorkout(APIView):
 
 class PresencesOnDay(APIView):
 
-    def get(self, request, day, month, year):
-        presences = Presence.objects.filter(workout__start_time__day=day).filter(workout__start_time__month=month).filter(workout__start_time__year=year).order_by('user__last_name').order_by('user__first_name')
+    def get(self, request, coach_id, day, month, year):
+        presences = Presence.objects.filter(workout__start_time__day=day).filter(workout__club__coach=coach_id).filter(workout__start_time__month=month).filter(workout__start_time__year=year).order_by('user__last_name').order_by('user__first_name')
         serializer = PresenceSerializer(presences, many=True)
         return Response({"Presences": serializer.data})
 
 
 class WorkoutsOnDay(APIView):
 
-    def get(self, request, day, month, year):
-        workouts = Workout.objects.filter(start_time__day=day).filter(start_time__month=month).filter(start_time__year=year).order_by('start_time')
+    def get(self, request, user_id, day, month, year):
+        workouts = Workout.objects.filter(start_time__day=day).filter(club__signup__user=user_id).filter(start_time__month=month).filter(start_time__year=year).order_by('start_time')
         serializer = WorkoutSerializer(workouts, many=True)
         return Response({"Workouts": serializer.data})
 
@@ -262,4 +262,28 @@ class ClubsForTrainerAPIView(APIView):
     def get(self, request, coach_id):
         clubs = Club.objects.filter(coach=coach_id)
         serializer = ClubSerializer(clubs, many=True)
-        return Response({'Clubs':serializer.data})
+        return Response({'Clubs': serializer.data})
+    
+   
+class PresencesInMonth(APIView):
+
+    def get(self, request, user_id, month):
+        presences = Presence.objects.filter(worcout__start_time__month=month).filter(user=user_id)
+        serializer = PresenceSerializer(presences, many=True)
+        return Response({"Presences": serializer.data})
+
+
+class CoachDetailAPIView(RetrieveAPIView):
+    serializer_class = CoachSerializer
+    queryset = Coach.objects.all()
+
+
+class PresencesCountForTypes(APIView):
+
+    def get(self, request, user_id):
+        cardio = Presence.objects.filter(user=user_id).filter(workout__type='кардио').filter(is_attend=True).count()
+        silov = Presence.objects.filter(user=user_id).filter(workout__type='силовая').filter(is_attend=True).count()
+        for_tech = Presence.objects.filter(user=user_id).filter(workout__type='на технику').filter(is_attend=True).count()
+        for_all = Presence.objects.filter(user=user_id).filter(workout__type='общая').filter(is_attend=True).count()
+        another = Presence.objects.filter(user=user_id).filter(workout__type='другое').filter(is_attend=True).count()
+        return Response({"Cardio": cardio, "Strength": silov, "For_tech": for_tech, "For_all": for_all, "Another": another})
