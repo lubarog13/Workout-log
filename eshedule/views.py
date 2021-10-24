@@ -1,9 +1,13 @@
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, DestroyAPIView
 from .serializers import *
 import datetime
-from django.db.models import Q, QuerySet
+from dateutil.parser import parse
+from django.db.models import Q, QuerySet, Count
 from rest_framework.response import Response
+import random
+import string
 from django.shortcuts import render
 
 
@@ -32,9 +36,36 @@ class SignUpCreateAPIView(CreateAPIView):
     queryset = SignUp.objects.all()
 
 
-class ClubCreateAPIView(CreateAPIView):
-    serializer_class = ClubSimpleSerializer
-    queryset = Club.objects.all()
+class ClubCreateAPIView(APIView):
+    def post(self, request):
+        # remember old state
+        _mutable = request.data._mutable
+        # set to mutable
+        request.data._mutable = True
+        characters = string.ascii_letters + string.digits
+        request.data['identifier'] = ''.join(random.choice(characters) for i in range(21))
+        serializer = ClubSimpleSerializer(data=request.data)
+        request.data._mutable = _mutable
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SignUpCreate(APIView):
+    def post(self, request):
+        club = Club.objects.get(identifier=request.data['identifier'])
+        user = User.objects.get(pk=request.data['user'])
+        try:
+            dt = parse(request.data['start_date']).date()
+            dt_e = parse(request.data['end_date']).date()
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        signup = SignUp(club=club, user=user, start_date=dt, end_date=dt_e)
+        signup.save()
+        serializer = SignUpSimpleSerializer(signup, many=False)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 class WorkoutCreateAPIView(CreateAPIView):
@@ -186,6 +217,10 @@ class WorkoutsOnWeekForUser(APIView):
         l_m = self.find_last_monday()
         workouts = Workout.objects.filter(start_time__lt=self.find_next_monday()).filter(start_time__gte=l_m).filter(user__id=user_id)
         serializer = WorkoutSerializer(workouts, many=True)
+        for data in serializer.data:
+            data['on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=True).count()
+            data['dont_know'] = Presence.objects.filter(workout=data['id']).filter(is_attend__isnull=True).count()
+            data['not_on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=False).count()
         return Response({"Workouts": serializer.data})
 
 
@@ -287,3 +322,23 @@ class PresencesCountForTypes(APIView):
         for_all = Presence.objects.filter(user=user_id).filter(workout__type='общая').filter(is_attend=True).count()
         another = Presence.objects.filter(user=user_id).filter(workout__type='другое').filter(is_attend=True).count()
         return Response({"Cardio": cardio, "Strength": silov, "For_tech": for_tech, "For_all": for_all, "Another": another})
+
+
+class PresencesForMounth(APIView):
+
+    def get(self, request, user_id, month, year):
+        presences = Presence.objects.filter(user=user_id).filter(workout__start_time__month=month, workout__start_time__year=year)
+        serializer = PresenceSimplerSerializer(presences, many=True)
+        return Response({"Presences": serializer.data})
+
+
+class PresencesCountForMonths(APIView):
+
+    def get(self, request, user_id, year):
+        presences = []
+        for i in range (1,13):
+            presence = Presence.objects.filter(user=user_id).filter(is_attend=True).filter(workout__start_time__month=i).filter(workout__start_time__year=year).count()
+            presences.append(presence)
+        return Response({"jan": presences[0], "feb": presences[1], "mar": presences[2], "apr": presences[3]
+                            , "may": presences[4], "jun": presences[5], "jul": presences[6], "aug": presences[7],
+                         "sep": presences[8], "oct": presences[9], "nov": presences[10], "dec": presences[11]})
