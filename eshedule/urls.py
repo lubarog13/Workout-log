@@ -1,12 +1,9 @@
 from django.urls import path, include, re_path
 from eshedule.views import *
 from django.conf.urls import url
-from rest_framework_swagger.views import get_swagger_view
 
-schema_view = get_swagger_view(title='Pastebin API')
 
 urlpatterns = [
-    url(r'^$', schema_view),
     path('auth/', include('djoser.urls')),
     re_path(r'^auth/', include('djoser.urls.authtoken')),
     path('buildings/', BuildingListAPIView.as_view()),
@@ -46,6 +43,9 @@ urlpatterns = [
     path('user/<int:user_id>/workouts/presences/<int:month>/', PresencesInMonth.as_view()),
     path('coach/<int:pk>/', CoachDetailAPIView.as_view()),
     path('user/<int:user_id>/analysis/types/', PresencesCountForTypes.as_view()),
-    path('user/<int:user_id>/presences/month/<int:month>/<int:year>', PresencesForMounth.as_view()),
-    path('user/<int:user_id>/analysis/<int:year>/', PresencesCountForMonths.as_view())
+    path('user/<int:user_id>/presences/month/<int:month>/<int:year>/', PresencesForMounth.as_view()),
+    path('user/<int:user_id>/analysis/<int:year>/', PresencesCountForMonths.as_view()),
+    path('coach/<int:coach_id>/workouts/<int:month>/<int_year>/', WorkoutsForMounth.as_view()),
+    path('coach/<int:coach_id>/analysis/groups/presences/', PresenceCountForGroups.as_view()),
+    path('coach/<int:coach_id>/analysis/groups/workouts/', WorkoutCountForGroups.as_view()),
 ]

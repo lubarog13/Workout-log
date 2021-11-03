@@ -137,3 +137,21 @@ class PresenceSimplerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Presence
         fields = "__all__"
+
+
+class AnalysisPresenceCount(serializers.ModelSerializer):
+    pcount = serializers.IntegerField()
+    workout__club__group = serializers.CharField()
+
+    class Meta:
+        model = Presence
+        fields = ('workout__club__group', 'pcount')
+
+
+class AnalysisWorkoutCount(serializers.ModelSerializer):
+    wcount = serializers.IntegerField()
+    club__group = serializers.CharField()
+
+    class Meta:
+        model = Workout
+        fields = ('club__group', 'wcount')

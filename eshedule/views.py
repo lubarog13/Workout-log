@@ -316,11 +316,19 @@ class CoachDetailAPIView(RetrieveAPIView):
 class PresencesCountForTypes(APIView):
 
     def get(self, request, user_id):
-        cardio = Presence.objects.filter(user=user_id).filter(workout__type='кардио').filter(is_attend=True).count()
-        silov = Presence.objects.filter(user=user_id).filter(workout__type='силовая').filter(is_attend=True).count()
-        for_tech = Presence.objects.filter(user=user_id).filter(workout__type='на технику').filter(is_attend=True).count()
-        for_all = Presence.objects.filter(user=user_id).filter(workout__type='общая').filter(is_attend=True).count()
-        another = Presence.objects.filter(user=user_id).filter(workout__type='другое').filter(is_attend=True).count()
+        user = User.objects.get(pk=user_id)
+        if not user.is_coach:
+            cardio = Presence.objects.filter(user=user_id).filter(workout__type='кардио').filter(is_attend=True).count()
+            silov = Presence.objects.filter(user=user_id).filter(workout__type='силовая').filter(is_attend=True).count()
+            for_tech = Presence.objects.filter(user=user_id).filter(workout__type='на технику').filter(is_attend=True).count()
+            for_all = Presence.objects.filter(user=user_id).filter(workout__type='общая').filter(is_attend=True).count()
+            another = Presence.objects.filter(user=user_id).filter(workout__type='другое').filter(is_attend=True).count()
+        else:
+            cardio = Workout.objects.filter(club__coach__user=user_id).filter(type='кардио').filter(Q(is_carried_out=False) & Q(start_time__lte=datetime.datetime.now())).count()
+            silov = Workout.objects.filter(club__coach__user=user_id).filter(type='силовая').filter(Q(is_carried_out=False) & Q(start_time__lte=datetime.datetime.now())).count()
+            for_tech = Workout.objects.filter(club__coach__user=user_id).filter(type='на технику').filter(Q(is_carried_out=False) & Q(start_time__lte=datetime.datetime.now())).count()
+            for_all = Workout.objects.filter(club__coach__user=user_id).filter(type='общая').filter(Q(is_carried_out=False) & Q(start_time__lte=datetime.datetime.now())).count()
+            another = Workout.objects.filter(club__coach__user=user_id).filter(type='другое').filter(Q(is_carried_out=False) & Q(start_time__lte=datetime.datetime.now())).count()
         return Response({"Cardio": cardio, "Strength": silov, "For_tech": for_tech, "For_all": for_all, "Another": another})
 
 
@@ -330,15 +338,62 @@ class PresencesForMounth(APIView):
         presences = Presence.objects.filter(user=user_id).filter(workout__start_time__month=month, workout__start_time__year=year)
         serializer = PresenceSimplerSerializer(presences, many=True)
         return Response({"Presences": serializer.data})
-
+    
+    
+class WorkoutsForMounth(APIView):
+    
+    def get(self, request, coach_id, month, year):
+        workouts = Workout.objects.filter(Q(coach_replace=coach_id) | Q(club__coach=coach_id)).filter(start_time__month=month).filter(start_time__year=year)
+        serializer = WorkoutSerializer(workouts, many=True)
+        return Response({"Workouts": serializer.data})
 
 class PresencesCountForMonths(APIView):
 
     def get(self, request, user_id, year):
         presences = []
+        user = User.objects.get(pk=user_id)
         for i in range (1,13):
-            presence = Presence.objects.filter(user=user_id).filter(is_attend=True).filter(workout__start_time__month=i).filter(workout__start_time__year=year).count()
+            if not user.is_coach:
+                presence = Presence.objects.filter(user=user_id).filter(is_attend=True).filter(workout__start_time__month=i).filter(workout__start_time__year=year).count()
+            else:
+                presence = Workout.objects.filter(club__coach__user=user_id).filter(Q(start_time__month=i) & Q(start_time__year=year)).count()
             presences.append(presence)
         return Response({"jan": presences[0], "feb": presences[1], "mar": presences[2], "apr": presences[3]
                             , "may": presences[4], "jun": presences[5], "jul": presences[6], "aug": presences[7],
                          "sep": presences[8], "oct": presences[9], "nov": presences[10], "dec": presences[11]})
+
+
+class PresenceCountForGroups(APIView):
+    # Select group, count(presence) from presence join workout on presence.workout_id=workout.workout_id join club on club.club_id=workout.workout_id where coach_id = coach_id and is_attend=true group by group
+    def get(self, request, coach_id):
+        if   request.data['day']=='all' :
+            counts = Presence.objects.select_related('workout')\
+                .select_related('club').filter(workout__club__coach=coach_id)\
+                .filter(is_attend=True).values('workout__club__group')\
+                .annotate(pcount=Count('is_attend'))
+        else:
+            counts = Presence.objects.select_related('workout')\
+                .select_related('club').filter(workout__club__coach=coach_id)\
+                .filter(is_attend=True).filter(workout__start_time__week_day=request.data['day']).values('workout__club__group')\
+                .annotate(pcount=Count('is_attend'))
+        serializer = AnalysisPresenceCount(counts, many=True)
+        return Response({"Stat": serializer.data})
+
+
+class WorkoutCountForGroups(APIView):
+
+    def get(self, request, coach_id):
+        if request.data['day'] == 'all':
+            counts = Workout.objects.select_related('club').filter(club__coach=coach_id)\
+                .filter(start_time__lte=datetime.datetime.now())\
+                .values('club__group').annotate(wcount=Count('id'))
+        else:
+            counts = Workout.objects.select_related('club').filter(club__coach=coach_id) \
+                .filter(start_time__lte=datetime.datetime.now()).filter(start_time__week_day=request.data['day']) \
+                .values('club__group').annotate(wcount=Count('id'))
+        serializer = AnalysisWorkoutCount(counts, many=True)
+        return Response({"Stat": serializer.data})
+
+
+
+
