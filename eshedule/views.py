@@ -68,9 +68,19 @@ class SignUpCreate(APIView):
 
 
 
-class WorkoutCreateAPIView(CreateAPIView):
-    serializer_class = WorkoutSimpleSerializer
-    queryset = Workout.objects.all()
+class WorkoutCreateAPIView(APIView):
+
+    def post(self, request):
+        serializer = WorkoutSimpleSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            club = Club.objects.get(pk=request.data['club'])
+            group = User.objects.filter(club=club.id)
+            for user in group:
+                presence = Presence(user=user, workout=Workout.objects.get(pk=serializer.data['id']), is_attend=None, reason=None, delay=False, early_ret=False)
+                presence.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class PresenceCreateAPIView(CreateAPIView):
