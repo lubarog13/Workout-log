@@ -17,6 +17,7 @@ urlpatterns = [
     path('user/<int:user_id>/sign_ups/', SignUpsForUser.as_view()),
     path('user/<int:user_id>/week_workouts/', WorkoutsOnWeekForUser.as_view()),
     path('user/<int:user_id>/today_workouts/', TodayWorkoutsForUser.as_view()),
+    path('presence/update/user/<int:user_id>/workout/<int:workout_id>/', PresenceUpdateByUserID.as_view()),
     path('workout/<int:workout_id>/presences/', PresenceForWorkout.as_view()),
     path('user/<int:user_id>/workouts/<int:day>/<int:month>/<int:year>/', WorkoutsOnDay.as_view()),
     path('coach/<int:coach_id>/presences/<int:day>/<int:month>/<int:year>/', PresencesOnDay.as_view()),

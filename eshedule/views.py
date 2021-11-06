@@ -92,6 +92,15 @@ class CoachCreateAPIView(CreateAPIView):
     serializer_class = CoachSimpleSerializer
     queryset = Coach.objects.all()
 
+class PresenceUpdateByUserID(APIView):
+
+    def patch(self, request, user_id, workout_id):
+        try:
+            Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend = request.data['is_attend'])
+            return Response(status=status.HTTP_201_CREATED)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class CoachUpdateAPIView(UpdateAPIView):
     serializer_class = CoachSimpleSerializer
