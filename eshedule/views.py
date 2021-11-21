@@ -61,10 +61,19 @@ class SignUpCreate(APIView):
             dt_e = parse(request.data['end_date']).date()
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        signup = SignUp(club=club, user=user, start_date=dt, end_date=dt_e)
-        signup.save()
-        serializer = SignUpSimpleSerializer(signup, many=False)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        signup1 = SignUp.objects.filter(club__identifier=request.data['identifier'])\
+            .filter(user__id=request.data['user'])
+        if signup1:
+            if signup1[0].end_date > dt_e:
+                signup1[0].end_date = dt_e
+            signup1[0].save()
+            serializer = SignUpSerializer(signup1[0], many=False)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            signup = SignUp(club=club, user=user, start_date=dt, end_date=dt_e)
+            signup.save()
+            serializer = SignUpSerializer(signup, many=False)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 
@@ -96,10 +105,20 @@ class PresenceUpdateByUserID(APIView):
 
     def patch(self, request, user_id, workout_id):
         try:
-            Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend = request.data['is_attend'])
-            return Response(status=status.HTTP_201_CREATED)
+            if request.data['reason'] is not None:
+                Presence.objects.filter(user=user_id, workout=workout_id).update(reason=request.data['reason'])
+                return Response(status=status.HTTP_201_CREATED)
         except:
+            if request.data['is_attend'] == 'true' or request.data['is_attend'] == True:
+                Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend=True)
+                return Response(status=status.HTTP_201_CREATED)
+            elif request.data['is_attend'] == 'false' or request.data['is_attend'] == False:
+                Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend=False)
+                return Response(status=status.HTTP_201_CREATED)
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        # except Exception:
+        #     print(Exception)
+        #     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class CoachUpdateAPIView(UpdateAPIView):
@@ -221,15 +240,17 @@ class WorkoutsOnWeekForUser(APIView):
     @staticmethod
     def find_last_monday():
         today = datetime.date.today()
-        idx = (today.weekday() + 1) % 7
-        mun = today - datetime.timedelta(7 - idx)
+        idx = (today.weekday()) % 7
+        mun = today - datetime.timedelta(idx)
+        print(mun)
         return mun
 
     @staticmethod
     def find_next_monday():
        today = datetime.date.today()
-       idx = (today.weekday()+1) % 7
+       idx = (today.weekday()) % 7
        mun = today + datetime.timedelta(7-idx)
+       print(mun)
        return mun
 
     def get(self, request, user_id):
@@ -240,6 +261,13 @@ class WorkoutsOnWeekForUser(APIView):
             data['on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=True).count()
             data['dont_know'] = Presence.objects.filter(workout=data['id']).filter(is_attend__isnull=True).count()
             data['not_on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=False).count()
+            go = Presence.objects.filter(workout=data['id']).filter(user=user_id)[0]
+            if go.is_attend==True:
+                data['is_on'] = True
+            elif go.is_attend==False:
+                data['is_on'] = False
+            else:
+                data['is_on'] = None
         return Response({"Workouts": serializer.data})
 
 
@@ -355,7 +383,7 @@ class PresencesForMounth(APIView):
 
     def get(self, request, user_id, month, year):
         presences = Presence.objects.filter(user=user_id).filter(workout__start_time__month=month, workout__start_time__year=year)
-        serializer = PresenceSimplerSerializer(presences, many=True)
+        serializer = PresenceSerializer(presences, many=True)
         return Response({"Presences": serializer.data})
     
     
@@ -412,6 +440,14 @@ class WorkoutCountForGroups(APIView):
                 .values('club__group').annotate(wcount=Count('id'))
         serializer = AnalysisWorkoutCount(counts, many=True)
         return Response({"Stat": serializer.data})
+
+
+class UsersInClub(APIView):
+
+    def get(self, request, club_id):
+        users = User.objects.filter(club__id=club_id)
+        serializer = UserNotAllFieldsSerializer(users, many=True)
+        return Response({"Users": serializer.data})
 
 
 

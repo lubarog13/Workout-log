@@ -105,7 +105,7 @@ class ClubSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
-    club = ClubSimpleSerializer(many=False)
+    club = ClubSerializer(many=False)
     user = UserNotAllFieldsSerializer(many=False)
 
     class Meta:
@@ -155,3 +155,9 @@ class AnalysisWorkoutCount(serializers.ModelSerializer):
     class Meta:
         model = Workout
         fields = ('club__group', 'wcount')
+
+
+class PresenceUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Presence
+        fields = ('is_attend', 'reason')
