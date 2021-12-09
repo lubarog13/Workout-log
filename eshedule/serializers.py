@@ -80,7 +80,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class CoachSerializer(serializers.ModelSerializer):
-    user = UserNotAllFieldsSerializer(many=False)
+    user = UserSerializer(many=False)
 
     class Meta:
         model = Coach
@@ -116,6 +116,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 class WorkoutSerializer(serializers.ModelSerializer):
     hall = HallSerializer(many=False)
     club = ClubSerializer(many=False)
+    coach_replace = CoachSerializer(many=False)
 
     class Meta:
         model = Workout
@@ -141,11 +142,11 @@ class PresenceSimplerSerializer(serializers.ModelSerializer):
 
 class AnalysisPresenceCount(serializers.ModelSerializer):
     pcount = serializers.IntegerField()
-    workout__club__group = serializers.CharField()
+    workout__club__id = serializers.IntegerField()
 
     class Meta:
         model = Presence
-        fields = ('workout__club__group', 'pcount')
+        fields = ('workout__club__id', 'pcount')
 
 
 class AnalysisWorkoutCount(serializers.ModelSerializer):
