@@ -149,6 +149,15 @@ class AnalysisPresenceCount(serializers.ModelSerializer):
         fields = ('workout__club__id', 'pcount')
 
 
+class AnalysisPresenceCountForMonths(serializers.ModelSerializer):
+    pcount = serializers.IntegerField()
+    workout__club__group = serializers.CharField()
+
+    class Meta:
+        model = Presence
+        fields = ('workout__club__group', 'pcount')
+
+
 class AnalysisWorkoutCount(serializers.ModelSerializer):
     wcount = serializers.IntegerField()
     club__group = serializers.CharField()

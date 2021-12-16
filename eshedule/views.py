@@ -38,14 +38,9 @@ class SignUpCreateAPIView(CreateAPIView):
 
 class ClubCreateAPIView(APIView):
     def post(self, request):
-        # remember old state
-        _mutable = request.data._mutable
-        # set to mutable
-        request.data._mutable = True
         characters = string.ascii_letters + string.digits
         request.data['identifier'] = ''.join(random.choice(characters) for i in range(21))
         serializer = ClubSimpleSerializer(data=request.data)
-        request.data._mutable = _mutable
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -75,6 +70,21 @@ class SignUpCreate(APIView):
             serializer = SignUpSerializer(signup, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
+class SignupForUserCreate(APIView):
+    def post(self, request):
+        serializer = SignUpSimpleSerializer(data=request.data)
+        today = datetime.datetime.now()
+        if serializer.is_valid():
+            serializer.save()
+            club = Club.objects.get(pk=request.data['club'])
+            workouts = Workout.objects.filter(club=club.id, start_time__gte=today)
+            user = User.objects.get(pk=request.data['user'])
+            for workout in workouts:
+                presence = Presence(user=user, workout=workout, is_attend=None, reason=None, delay=False, early_ret=False)
+                presence.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class WorkoutCreateAPIView(APIView):
@@ -479,6 +489,22 @@ class PresenceCountForGroups(APIView):
         return Response({"Stat": serializer.data})
 
 
+class PresenceCountForGroupsForMonth(APIView):
+    # Select group, count(presence) from presence join workout on presence.workout_id=workout.workout_id join club on club.club_id=workout.workout_id where coach_id = coach_id and is_attend=true group by group
+    def post(self, request, coach_id):
+        if  request.data['day']=='all' :
+            counts = Presence.objects.select_related('workout')\
+                .select_related('club').filter(workout__club__coach=coach_id)\
+                .filter(is_attend=True).values('workout__club__group')\
+                .annotate(pcount=Count('is_attend'))
+        else:
+            counts = Presence.objects.select_related('workout')\
+                .select_related('club').filter(workout__club__coach=coach_id)\
+                .filter(is_attend=True).filter(workout__start_time__month=request.data['day']).values('workout__club__group')\
+                .annotate(pcount=Count('is_attend'))
+        serializer = AnalysisPresenceCountForMonths(counts, many=True)
+        return Response({"Stat": serializer.data})
+
 class WorkoutCountForGroupForTypes(APIView):
     def get(self, request, coach_id, club_id):
         cardio = Workout.objects.filter(Q(club__coach__id=coach_id) | Q(coach_replace=coach_id)).filter(club=club_id).filter(type='кардио').count()
@@ -491,7 +517,7 @@ class WorkoutCountForGroupForTypes(APIView):
 
 class WorkoutCountForGroups(APIView):
 
-    def get(self, request, coach_id):
+    def post(self, request, coach_id):
         if request.data['day'] == 'all':
             counts = Workout.objects.select_related('club').filter(club__coach=coach_id)\
                 .filter(start_time__lte=datetime.datetime.now())\
@@ -502,6 +528,22 @@ class WorkoutCountForGroups(APIView):
                 .values('club__group').annotate(wcount=Count('id'))
         serializer = AnalysisWorkoutCount(counts, many=True)
         return Response({"Stat": serializer.data})
+
+
+class WorkoutCountForGroupsForMonth(APIView):
+
+    def post(self, request, coach_id):
+        if request.data['day'] == 'all':
+            counts = Workout.objects.select_related('club').filter(club__coach=coach_id)\
+                .filter(start_time__lte=datetime.datetime.now())\
+                .values('club__group').annotate(wcount=Count('id'))
+        else:
+            counts = Workout.objects.select_related('club').filter(club__coach=coach_id) \
+                .filter(start_time__lte=datetime.datetime.now()).filter(start_time__month=request.data['day']) \
+                .values('club__group').annotate(wcount=Count('id'))
+        serializer = AnalysisWorkoutCount(counts, many=True)
+        return Response({"Stat": serializer.data})
+
 
 
 class UsersInClub(APIView):
