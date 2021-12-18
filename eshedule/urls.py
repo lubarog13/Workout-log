@@ -61,5 +61,9 @@ urlpatterns = [
                   path('club/<int:club_id>/users/', UsersInClub.as_view()),
                   path('search/user/', UserSearch.as_view()),
                   path("signup/<int:sign_up_id>/delete/", SignupDeleteAPIView.as_view()),
-                  path("coach/user<int:user_id>/", CoachForUserAPIView.as_view())
+                  path("coach/user<int:user_id>/", CoachForUserAPIView.as_view()),
+                  path("send_message/", SendNotification.as_view()),
+                  path("fcmdevice/create/", CreateDevice.as_view()),
+                  path("fcmdevice/<int:pk>/update/", UpdateDevice.as_view()),
+                  path("user/<int:user_id>/fcmdevices/", DevicesListForUser.as_view())
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

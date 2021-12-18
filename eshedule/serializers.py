@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import *
+from fcm_django.models import FCMDevice
 
 
 class UserSimpleSerializer(serializers.ModelSerializer):
@@ -171,3 +172,9 @@ class PresenceUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Presence
         fields = ('is_attend', 'reason')
+
+
+class FCMDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FCMDevice
+        fields = "__all__"

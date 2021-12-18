@@ -6,8 +6,12 @@ import datetime
 from dateutil.parser import parse
 from django.db.models import Q, QuerySet, Count
 from rest_framework.response import Response
+from fcm_django.models import FCMDevice
 import random
 import string
+from pyfcm import FCMNotification
+
+push_service = FCMNotification(api_key="AAAAOUUqqfM:APA91bGumWRwEjq9pvfcFza32yWVZe_LymLdb0Ga4IGzwIISC0ZVsECTPWM-UAlvqwLFWP8wot8456VCaXFqu8zsJ64o37_8LRR3jHr1zKfOz0vhrkGylwD7un6XlyuPaeqDATp7r3xa")
 from django.shortcuts import render
 
 
@@ -600,5 +604,32 @@ class CoachForUserAPIView(APIView):
         return Response({"Coach": serializer.data})
 
 
+class SendNotification(APIView):
+
+    def post(self, request):
+        users = User.objects.filter(club__id=request.data['club'])
+        message_title = request.data['title']
+        message_body = request.data['message']
+        registrations_ids = []
+        for user in users:
+            registrations_ids.append(FCMDevice.objects.filter(user_id=user.id))
+        result = push_service.notify_multiple_devices(registration_ids=registrations_ids, message_title=message_title,message_body=message_body)
+        print(result)
 
 
+class DevicesListForUser(APIView):
+
+    def get(self, request, user_id):
+        devices = FCMDevice.objects.filter(user_id=user_id)
+        serializer = FCMDeviceSerializer(devices, many=True)
+        return Response({'Devices': serializer.data})
+
+
+class CreateDevice(CreateAPIView):
+    serializer_class = FCMDeviceSerializer
+    queryset = FCMDevice.objects.all()
+
+
+class UpdateDevice(UpdateAPIView):
+    serializer_class = FCMDeviceSerializer
+    queryset = FCMDevice.objects.all()
