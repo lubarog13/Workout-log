@@ -2,7 +2,6 @@ from django.urls import path, include, re_path
 from django.conf.urls.static import static
 
 from eshedule.views import *
-from django.conf.urls import url
 
 from trainingLog import settings
 
