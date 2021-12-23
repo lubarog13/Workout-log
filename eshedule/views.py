@@ -611,11 +611,14 @@ class SendNotification(APIView):
         message_title = request.data['title']
         message_body = request.data['message']
         registrations_ids = []
+        print('ok1')
         for user in users:
-            registrations_ids.append(FCMDevice.objects.filter(user_id=user.id).select_related('registration_id'))
+            for fcm_device in FCMDevice.objects.filter(user_id=user.id):
+                registrations_ids.append(fcm_device.registration_id)
+        print(registrations_ids)
         result = push_service.notify_multiple_devices(registration_ids=registrations_ids, message_title=message_title,message_body=message_body)
         print(result)
-
+        return Response({"Result": result})
 
 class DevicesListForUser(APIView):
 
