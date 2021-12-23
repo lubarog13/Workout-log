@@ -612,7 +612,7 @@ class SendNotification(APIView):
         message_body = request.data['message']
         registrations_ids = []
         for user in users:
-            registrations_ids.append(FCMDevice.objects.filter(user_id=user.id))
+            registrations_ids.append(FCMDevice.objects.filter(user_id=user.id).select_related('registration_id'))
         result = push_service.notify_multiple_devices(registration_ids=registrations_ids, message_title=message_title,message_body=message_body)
         print(result)
 
