@@ -65,5 +65,6 @@ urlpatterns = [
                   path("send_message/", SendNotification.as_view()),
                   path("fcmdevice/create/", CreateDevice.as_view()),
                   path("fcmdevice/<int:pk>/update/", UpdateDevice.as_view()),
-                  path("user/<int:user_id>/fcmdevices/", DevicesListForUser.as_view())
+                  path("user/<int:user_id>/fcmdevices/", DevicesListForUser.as_view()),
+                  path("reset_password/", ResetPassword.as_view())
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

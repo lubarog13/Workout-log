@@ -7,6 +7,7 @@ from dateutil.parser import parse
 from django.db.models import Q, QuerySet, Count
 from rest_framework.response import Response
 from fcm_django.models import FCMDevice
+from django.core import mail
 import random
 import string
 from pyfcm import FCMNotification
@@ -636,3 +637,25 @@ class CreateDevice(CreateAPIView):
 class UpdateDevice(UpdateAPIView):
     serializer_class = FCMDeviceSerializer
     queryset = FCMDevice.objects.all()
+
+
+class ResetPassword(APIView):
+
+    def post(self, request):
+        username = request.data['username']
+        user = User.objects.get(username=username)
+        connection = mail.get_connection()
+        print(user.email)
+        connection.open()
+        print(user)
+        email1 = mail.EmailMessage(
+            'Восстановление пароля',
+            'Токен для восстановления пароля',
+            User.objects.get(username='admin').email,
+            [user.email],
+            connection=connection,
+        )
+        email1.send()
+        print(user)
+        connection.close()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -57,7 +57,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'trainingLog.urls'
 
-MEDIA_ROOT = 'eshedule.media'
+MEDIA_ROOT = 'eshedule/media'
 
 MEDIA_URL = '/media/'
 
@@ -97,6 +97,12 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'prilozeniemoe@gmail.com'
+EMAIL_HOST_PASSWORD = 'hello123 Somebody'
 
 AUTH_USER_MODEL = 'eshedule.User'
 # Password validation
