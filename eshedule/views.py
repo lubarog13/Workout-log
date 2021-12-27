@@ -1,16 +1,27 @@
+import djoser.urls.base
+from django.urls import reverse
+from django.views import View
+from django.views.generic import TemplateView
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, DestroyAPIView
 from .serializers import *
+from django.contrib.auth.hashers import make_password
 import datetime
 from dateutil.parser import parse
 from django.db.models import Q, QuerySet, Count
 from rest_framework.response import Response
 from fcm_django.models import FCMDevice
+import requests
 from django.core import mail
+from django.contrib.auth.password_validation import validate_password
+from djoser.views import UserViewSet
 import random
 import string
 from pyfcm import FCMNotification
+from django.template import Context as cont
+from django.template.loader import get_template
 
 push_service = FCMNotification(api_key="AAAAOUUqqfM:APA91bGumWRwEjq9pvfcFza32yWVZe_LymLdb0Ga4IGzwIISC0ZVsECTPWM-UAlvqwLFWP8wot8456VCaXFqu8zsJ64o37_8LRR3jHr1zKfOz0vhrkGylwD7un6XlyuPaeqDATp7r3xa")
 from django.shortcuts import render
@@ -645,17 +656,56 @@ class ResetPassword(APIView):
         username = request.data['username']
         user = User.objects.get(username=username)
         connection = mail.get_connection()
+        plaintext = get_template('email.txt')
+        htmly = get_template('email.html')
         print(user.email)
         connection.open()
         print(user)
-        email1 = mail.EmailMessage(
+        if user.reset_password_token is None:
+            characters = string.ascii_letters + string.digits
+            user.reset_password_token = ''.join(random.choice(characters) for i in range(21))
+            user.save()
+        d = cont({'username': user.username, 'token': user.reset_password_token})
+        text_content = plaintext.render(d.flatten())
+        html_content = htmly.render(d.flatten())
+        email1 = mail.EmailMultiAlternatives(
             'Восстановление пароля',
-            'Токен для восстановления пароля',
+            text_content,
             User.objects.get(username='admin').email,
             [user.email],
             connection=connection,
         )
+        email1.attach_alternative(html_content, "text/html")
         email1.send()
         print(user)
         connection.close()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class NewPassword(APIView):
+
+    def post(self, request):
+        user = User.objects.get(username=request.data['username'])
+        if user.reset_password_token == request.data['reset_password_token']:
+            # p_S = UserViewSet
+            # p_S.me(p_S, request=request)
+            request1 = request
+            print("{0}://{1}/".format(request.scheme, request.get_host()))
+            r = requests.patch("{0}://{1}/auth/users/me/".format(request1.scheme, request1.get_host()), data=request1.data, headers=request1.headers)
+            return Response(status=status.HTTP_200_OK)
+            # try:
+            #     user.save()
+            # except :
+            #     return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class NewPasswordByDjoser(View):
+
+    def get(self, request, uid, token):
+        context = {'uid': uid, 'token': token}
+        return render(request, 'reset_password.html', context)
+
+
+
+

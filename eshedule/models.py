@@ -8,6 +8,7 @@ class User(AbstractUser):
     date_birth = models.DateField()                                        # Дата рождения
     sex = models.CharField(max_length=1, choices={('М', 'М'), ('Ж', 'Ж')}) # Пол
     is_coach = models.BooleanField(blank=True, null=True)                  # Это_тренер
+    reset_password_token=models.CharField(max_length=40, blank=True, null=True)
     club = models.ManyToManyField("Club", through="SignUp")                # Секции
     REQUIRED_FIELDS = ['first_name', 'last_name', 'second_name', 'email', 'date_birth', 'sex', 'is_coach']
 
