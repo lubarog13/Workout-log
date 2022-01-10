@@ -127,12 +127,19 @@ class CoachCreateAPIView(CreateAPIView):
     serializer_class = CoachSimpleSerializer
     queryset = Coach.objects.all()
 
+
 class PresenceUpdateByUserID(APIView):
 
     def patch(self, request, user_id, workout_id):
         try:
             if request.data['reason'] is not None:
                 Presence.objects.filter(user=user_id, workout=workout_id).update(reason=request.data['reason'])
+                return Response(status=status.HTTP_201_CREATED)
+            if request.data['is_attend'] == 'true' or request.data['is_attend'] == True:
+                Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend=True)
+                return Response(status=status.HTTP_201_CREATED)
+            elif request.data['is_attend'] == 'false' or request.data['is_attend'] == False:
+                Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend=False)
                 return Response(status=status.HTTP_201_CREATED)
         except:
             if request.data['is_attend'] == 'true' or request.data['is_attend'] == True:
@@ -141,7 +148,7 @@ class PresenceUpdateByUserID(APIView):
             elif request.data['is_attend'] == 'false' or request.data['is_attend'] == False:
                 Presence.objects.filter(user=user_id, workout=workout_id).update(is_attend=False)
                 return Response(status=status.HTTP_201_CREATED)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
         # except Exception:
         #     print(Exception)
         #     return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -282,7 +289,7 @@ class WorkoutsOnWeekForUser(APIView):
 
     def get(self, request, user_id):
         l_m = self.find_last_monday()
-        workouts = Workout.objects.filter(start_time__lt=self.find_next_monday()).filter(start_time__gte=l_m).filter(user__id=user_id)
+        workouts = Workout.objects.filter(start_time__lt=self.find_next_monday()).filter(start_time__gte=l_m).filter(user__id=user_id).order_by('start_time')
         serializer = WorkoutSerializer(workouts, many=True)
         for data in serializer.data:
             data['on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=True).count()
@@ -427,7 +434,7 @@ class ClubsForTrainerAPIView(APIView):
 class PresencesInMonth(APIView):
 
     def get(self, request, user_id, month):
-        presences = Presence.objects.filter(worcout__start_time__month=month).filter(user=user_id)
+        presences = Presence.objects.filter(workout__start_time__month=month).filter(user=user_id)
         serializer = PresenceSerializer(presences, many=True)
         return Response({"Presences": serializer.data})
 
@@ -462,6 +469,16 @@ class PresencesForMounth(APIView):
         presences = Presence.objects.filter(user=user_id).filter(workout__start_time__month=month, workout__start_time__year=year)
         serializer = PresenceSerializer(presences, many=True)
         return Response({"Presences": serializer.data})
+
+class WorkoutsForMonth(APIView):
+    def get(self, request, user_id, month, year):
+        workouts =  Workout.objects.filter(user__id=user_id).filter(start_time__month=month, start_time__year=year)
+        serializer = WorkoutSerializer(workouts, many=True)
+        for data in serializer.data:
+            data['on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=True).count()
+            data['dont_know'] = Presence.objects.filter(workout=data['id']).filter(is_attend__isnull=True).count()
+            data['not_on_train'] = Presence.objects.filter(workout=data['id']).filter(is_attend=False).count()
+        return Response({"Workouts": serializer.data})
     
     
 class WorkoutsForMounth(APIView):

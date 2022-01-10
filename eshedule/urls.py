@@ -47,6 +47,7 @@ urlpatterns = [
                   path('coach/<int:coach_id>/clubs/', ClubForCoachAPIView.as_view()),
                   path('user/<int:user_id>/presences/count/<int:month>/', PresenceCountInMonthForTypes.as_view()),
                   path('user/<int:user_id>/workouts/presences/<int:month>/', PresencesInMonth.as_view()),
+                  path('user/<int:user_id>/workouts/<int:month>/<int:year>/', WorkoutsForMonth.as_view()),
                   path('coach/<int:pk>/', CoachDetailAPIView.as_view()),
                   path('user/<int:user_id>/analysis/types/', PresencesCountForTypes.as_view()),
                   path('user/<int:user_id>/presences/month/<int:month>/<int:year>/', PresencesForMounth.as_view()),
