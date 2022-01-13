@@ -30,10 +30,13 @@ class Coach(models.Model):
 
 # Здание
 class Building(models.Model):
+    name = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=45)                        # Город
     address = models.CharField(max_length=100)                    # Адрес
     number = models.PositiveIntegerField()                        # Номер
     liter = models.CharField(max_length=1, blank=True, null=True) # Литера
+    lat = models.FloatField(blank=True, null=True)
+    lng = models.FloatField(blank=True, null=True)
 
 
 # Зал
