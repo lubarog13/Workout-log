@@ -505,6 +505,19 @@ class PresencesCountForMonths(APIView):
                          "sep": presences[8], "oct": presences[9], "nov": presences[10], "dec": presences[11]})
 
 
+class NotAttendCountForMonths(APIView):
+    def get(self, request, user_id, year):
+        presences = []
+        user = User.objects.get(pk=user_id)
+        for i in range (1,13):
+            if not user.is_coach:
+                presence = Presence.objects.filter(user=user_id).filter(is_attend=False).filter(workout__start_time__month=i).filter(workout__start_time__year=year).count()
+            presences.append(presence)
+        return Response({"jan": presences[0], "feb": presences[1], "mar": presences[2], "apr": presences[3]
+                            , "may": presences[4], "jun": presences[5], "jul": presences[6], "aug": presences[7],
+                         "sep": presences[8], "oct": presences[9], "nov": presences[10], "dec": presences[11]})
+
+
 class PresenceCountForGroups(APIView):
     # Select group, count(presence) from presence join workout on presence.workout_id=workout.workout_id join club on club.club_id=workout.workout_id where coach_id = coach_id and is_attend=true group by group
     def post(self, request, coach_id):
@@ -594,6 +607,7 @@ class WorkoutListAPIView(ListAPIView):
 class UserSearch(APIView):
 
     def post(self, request):
+        print(request.data)
         name = request.data['username']
         names = name.split()
         user = User.objects.filter(Q(username=name) | Q(email=name))

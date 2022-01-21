@@ -52,6 +52,7 @@ urlpatterns = [
                   path('user/<int:user_id>/analysis/types/', PresencesCountForTypes.as_view()),
                   path('user/<int:user_id>/presences/month/<int:month>/<int:year>/', PresencesForMounth.as_view()),
                   path('user/<int:user_id>/analysis/<int:year>/', PresencesCountForMonths.as_view()),
+                  path('user/<int:user_id>/analysis/not_attend/<int:year>/', NotAttendCountForMonths.as_view()),
                   path('coach/<int:coach_id>/workouts/<int:month>/<int:year>/', WorkoutsForMounth.as_view()),
                   path('coach/<int:coach_id>/analysis/groups/presences/', PresenceCountForGroups.as_view()),
                   path('coach/<int:coach_id>/analysis/club/<int:club_id>/workouts/', WorkoutCountForGroupForTypes.as_view()),
