@@ -75,7 +75,7 @@ class SignUpCreate(APIView):
         signup1 = SignUp.objects.filter(club__identifier=request.data['identifier'])\
             .filter(user__id=request.data['user'])
         if signup1:
-            if signup1[0].end_date > dt_e:
+            if signup1[0].end_date < dt_e:
                 signup1[0].end_date = dt_e
             signup1[0].save()
             serializer = SignUpSerializer(signup1[0], many=False)
@@ -531,6 +531,7 @@ class PresenceCountForGroups(APIView):
                 .select_related('club').filter(workout__club__coach=coach_id)\
                 .filter(is_attend=True).filter(workout__start_time__week_day=request.data['day']).values('workout__club__id')\
                 .annotate(pcount=Count('is_attend'))
+            print(request.data['day'])
         serializer = AnalysisPresenceCount(counts, many=True)
         return Response({"Stat": serializer.data})
 
