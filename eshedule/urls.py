@@ -10,8 +10,11 @@ urlpatterns = [
                   re_path(r'^auth/', include('djoser.urls.authtoken')),
                   path('buildings/', BuildingListAPIView.as_view()),
                   path('halls/', HallListAPIView.as_view()),
+                  path('building/create/', BuildingCreateAPIView.as_view()),
                   path('building/<int:building_id>/halls/', HallsInBuildingAPIView.as_view()),
                   path('coaches/', CoachesListAPIView.as_view()),
+                  path('building/<int:pk>/', BuildingAPIView.as_view()),
+                  path('building/<int:pk>/update/', BuildingUpdateAPIView.as_view()),
                   path('clubs/', ClubListAPIView.as_view()),
                   path('building/<int:building_id>/clubs/', ClubsInBuildingAPIView.as_view()),
                   path('coach/<int:coach_id>/clubs/', ClubForCoachAPIView.as_view()),
@@ -70,5 +73,6 @@ urlpatterns = [
                   path("user/<int:user_id>/fcmdevices/", DevicesListForUser.as_view()),
                   path("reset_password/", ResetPassword.as_view()),
                   path("new_password/", NewPassword.as_view(), name="new_password"),
-                  path("email/reset/confirm/<uid>/<token>", NewPasswordByDjoser.as_view())
+                  path("email/reset/confirm/<uid>/<token>", NewPasswordByDjoser.as_view()),
+                  path("upload/building/", UploadBuildingImage.as_view(), name="upload")
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

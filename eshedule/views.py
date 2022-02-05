@@ -1,4 +1,5 @@
 import djoser.urls.base
+from django.core.files.storage import FileSystemStorage
 from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
@@ -739,5 +740,22 @@ class NewPasswordByDjoser(View):
         return render(request, 'reset_password.html', context)
 
 
+class UploadBuildingImage(APIView):
+
+    def post(self, request):
+        if request.method == 'POST' and request.data['image_file']:
+            upload = request.data['image_file']
+            fss = FileSystemStorage()
+            building = Building.objects.all().last()
+            name = (building.pk).__str__() + "_building.jpg"
+            if fss.exists(name):
+                fss.delete(name)
+            file = fss.save(name, upload)
+            file_url = fss.url(file)
+            return Response({'Path': file_url}, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class BuildingAPIView(RetrieveAPIView):
+    queryset = Building.objects.all()
+    serializer_class = BuildingSimpleSerializer
