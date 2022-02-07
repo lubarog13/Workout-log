@@ -21,6 +21,8 @@ urlpatterns = [
                   path('user/<int:pk>/', UserAPIView.as_view()),
                   path('user/<int:user_id>/sign_ups/', SignUpsForUser.as_view()),
                   path('user/<int:user_id>/week_workouts/', WorkoutsOnWeekForUser.as_view()),
+                  path('hall/create/', HallCreateAPIView.as_view()),
+                  path('hall/<int:pk>/update/', HallUpdateAPIView.as_view()),
                   path('user/<int:user_id>/today_workouts/', TodayWorkoutsForUser.as_view()),
                   path('presence/update/user/<int:user_id>/workout/<int:workout_id>/',
                        PresenceUpdateByUserID.as_view()),
@@ -74,5 +76,6 @@ urlpatterns = [
                   path("reset_password/", ResetPassword.as_view()),
                   path("new_password/", NewPassword.as_view(), name="new_password"),
                   path("email/reset/confirm/<uid>/<token>", NewPasswordByDjoser.as_view()),
-                  path("upload/building/", UploadBuildingImage.as_view(), name="upload")
+                  path("upload/building/", UploadBuildingImage.as_view(), name="upload"),
+                  path("upload/hall/", UploadHallImage.as_view())
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

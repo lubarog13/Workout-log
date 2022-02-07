@@ -756,6 +756,22 @@ class UploadBuildingImage(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
+class UploadHallImage(APIView):
+
+    def post(self, request):
+        if request.method == 'POST' and request.data['image_file']:
+            upload = request.data['image_file']
+            fss = FileSystemStorage()
+            hall = Hall.objects.all().last()
+            name = (hall.pk).__str__() + "_hall.jpg"
+            if fss.exists(name):
+                fss.delete(name)
+            file = fss.save(name, upload)
+            file_url = fss.url(file)
+            return Response({'Path': file_url}, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class BuildingAPIView(RetrieveAPIView):
     queryset = Building.objects.all()
     serializer_class = BuildingSimpleSerializer
