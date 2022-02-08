@@ -185,6 +185,11 @@ class SignUpUpdateAPIView(UpdateAPIView):
     queryset = SignUp.objects.all()
 
 
+class UserDetailAPIView(RetrieveAPIView):
+    serializer_class = UserNotAllFieldsSerializer
+    queryset = User.objects.all()
+
+
 class ClubUpdateAPIView(UpdateAPIView):
     serializer_class = ClubSimpleSerializer
     queryset = Club.objects.all()

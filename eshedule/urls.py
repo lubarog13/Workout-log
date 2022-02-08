@@ -12,6 +12,7 @@ urlpatterns = [
                   path('halls/', HallListAPIView.as_view()),
                   path('building/create/', BuildingCreateAPIView.as_view()),
                   path('building/<int:building_id>/halls/', HallsInBuildingAPIView.as_view()),
+                  path('user/<int:pk>/', UserDetailAPIView.as_view()),
                   path('coaches/', CoachesListAPIView.as_view()),
                   path('building/<int:pk>/', BuildingAPIView.as_view()),
                   path('building/<int:pk>/update/', BuildingUpdateAPIView.as_view()),

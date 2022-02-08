@@ -12,7 +12,7 @@ class UserSimpleSerializer(serializers.ModelSerializer):
 class UserNotAllFieldsSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'second_name', 'date_birth', 'sex', 'club']
+        fields = ['id', 'username', 'first_name', 'last_name', 'second_name', 'date_birth', 'sex', 'club', 'email']
 
 
 class MessageSimpleSerializer(serializers.ModelSerializer):
