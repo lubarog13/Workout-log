@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.generics import CreateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView, DestroyAPIView
 from .serializers import *
-from django.contrib.auth.hashers import make_password
+from rest_framework.permissions import IsAdminUser
 import datetime
 from dateutil.parser import parse
 from django.db.models import Q, QuerySet, Count
@@ -41,11 +41,13 @@ class MessageCreateAPIView(CreateAPIView):
 class BuildingCreateAPIView(CreateAPIView):
     serializer_class = BuildingSimpleSerializer
     queryset = Building.objects.all()
+    permission_classes = [IsAdminUser]
 
 
 class HallCreateAPIView(CreateAPIView):
     serializer_class = HallSimpleSerializer
     queryset = Hall.objects.all()
+    permission_classes = [IsAdminUser]
 
 
 class SignUpCreateAPIView(CreateAPIView):
@@ -195,14 +197,32 @@ class ClubUpdateAPIView(UpdateAPIView):
     queryset = Club.objects.all()
 
 
-class WorkoutUpdateAPIView(UpdateAPIView):
-    serializer_class = WorkoutSimpleSerializer
-    queryset = Workout.objects.all()
+class WorkoutUpdateAPIView(APIView):
+    def put(self, request, pk, format=None):
+        workout = Workout.objects.get(pk=pk)
+        serializer = WorkoutSimpleSerializer(workout, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            if request.data['is_carried_out'] == 'true':
+                presences = Presence.objects.filter(workout=workout.pk)
+                for presence in presences:
+                    presence.is_attend = None
+                    presence.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class PresenceUpdateAPIView(UpdateAPIView):
-    serializer_class = PresenceSimpleSerializer
-    queryset = Presence.objects.all()
+class PresenceUpdateAPIView(APIView):
+    def put(self, request, pk, format=None):
+        presence = Presence.objects.get(pk=pk)
+        workout = Workout.objects.get(pk=presence.workout.pk)
+        if workout.is_carried_out:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        serializer = PresenceSimplerSerializer(presence, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class SignUpsForUser(APIView):
