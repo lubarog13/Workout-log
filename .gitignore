@@ -1,2 +1,3 @@
 /eshedule/migrations/*
 /venv
+/trainingLog/settings.py
