@@ -218,10 +218,11 @@ class PresenceUpdateAPIView(APIView):
         workout = Workout.objects.get(pk=presence.workout.pk)
         if workout.is_carried_out:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = PresenceSimplerSerializer(presence, data=request.data)
+        serializer = PresenceSimpleSerializer(presence, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
