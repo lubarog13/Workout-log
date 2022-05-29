@@ -783,7 +783,14 @@ class UploadBuildingImage(APIView):
         if request.method == 'POST' and request.data['image_file']:
             upload = request.data['image_file']
             fss = FileSystemStorage()
-            building = Building.objects.all().last()
+            try:
+                building_id = request.data['building_id']
+            except:
+                building_id = None
+            if building_id:
+                building = Building.objects.get(pk=building_id)
+            else:
+                building = Building.objects.all().last()
             name = (building.pk).__str__() + "_building.jpg"
             if fss.exists(name):
                 fss.delete(name)
@@ -801,7 +808,14 @@ class UploadHallImage(APIView):
         if request.method == 'POST' and request.data['image_file']:
             upload = request.data['image_file']
             fss = FileSystemStorage()
-            hall = Hall.objects.all().last()
+            try:
+                hall_id = request.data['hall_id']
+            except:
+                hall_id = None
+            if hall_id:
+                hall = Hall.objects.get(pk=hall_id)
+            else:
+                hall = Hall.objects.all().last()
             name = (hall.pk).__str__() + "_hall.jpg"
             if fss.exists(name):
                 fss.delete(name)
@@ -819,7 +833,14 @@ class UploadCoachImage(APIView):
         if request.method == 'POST' and request.data['image_file']:
             upload = request.data['image_file']
             fss = FileSystemStorage()
-            coach = Coach.objects.all().last()
+            try:
+                coach_id = request.data['coach_id']
+            except:
+                coach_id = None
+            if coach_id:
+                coach = Coach.objects.get(pk=coach_id)
+            else:
+                coach = Coach.objects.all().last()
             name = (coach.pk).__str__() + "_coach.jpg"
             if fss.exists(name):
                 fss.delete(name)
