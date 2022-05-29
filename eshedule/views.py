@@ -126,9 +126,19 @@ class PresenceCreateAPIView(CreateAPIView):
     queryset = Presence.objects.all()
 
 
-class CoachCreateAPIView(CreateAPIView):
-    serializer_class = CoachSimpleSerializer
-    queryset = Coach.objects.all()
+class CoachCreateAPIView(APIView):
+
+    def post(self, request):
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        user = User.objects.get(username=request.data['username'])
+        if not user:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        user.is_coach = True
+        user.save()
+        coach = Coach(post=request.data['post'], user=user)
+        coach.save()
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class PresenceUpdateByUserID(APIView):
@@ -273,8 +283,7 @@ class ClubsInBuildingAPIView(APIView):
 class MessagesForUserAPiView(APIView):
 
     def get(self, request, user_id):
-        print(Workout.objects.values('start_time').get(pk=13))
-        messages = Message.objects.filter(recipient=user_id)
+        messages = Message.objects.filter(recipient=user_id).order_by('-send_time')
         serializer = MessageSerializer(messages, many=True)
         return Response({"Messages":serializer.data})
 
@@ -282,7 +291,7 @@ class MessagesForUserAPiView(APIView):
 class MessagesFromUserAPiView(APIView):
 
     def get(self, request, user_id):
-        messages = Message.objects.filter(sender=user_id)
+        messages = Message.objects.filter(sender=user_id).order_by('-send_time')
         serializer = MessageSerializer(messages, many=True)
         return Response({"Messages":serializer.data})
 
@@ -769,6 +778,8 @@ class NewPasswordByDjoser(View):
 class UploadBuildingImage(APIView):
 
     def post(self, request):
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         if request.method == 'POST' and request.data['image_file']:
             upload = request.data['image_file']
             fss = FileSystemStorage()
@@ -785,11 +796,31 @@ class UploadBuildingImage(APIView):
 class UploadHallImage(APIView):
 
     def post(self, request):
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         if request.method == 'POST' and request.data['image_file']:
             upload = request.data['image_file']
             fss = FileSystemStorage()
             hall = Hall.objects.all().last()
             name = (hall.pk).__str__() + "_hall.jpg"
+            if fss.exists(name):
+                fss.delete(name)
+            file = fss.save(name, upload)
+            file_url = fss.url(file)
+            return Response({'Path': file_url}, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UploadCoachImage(APIView):
+
+    def post(self, request):
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        if request.method == 'POST' and request.data['image_file']:
+            upload = request.data['image_file']
+            fss = FileSystemStorage()
+            coach = Coach.objects.all().last()
+            name = (coach.pk).__str__() + "_coach.jpg"
             if fss.exists(name):
                 fss.delete(name)
             file = fss.save(name, upload)

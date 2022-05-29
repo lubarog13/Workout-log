@@ -78,5 +78,6 @@ urlpatterns = [
                   path("new_password/", NewPassword.as_view(), name="new_password"),
                   path("email/reset/confirm/<uid>/<token>", NewPasswordByDjoser.as_view()),
                   path("upload/building/", UploadBuildingImage.as_view(), name="upload"),
-                  path("upload/hall/", UploadHallImage.as_view())
+                  path("upload/hall/", UploadHallImage.as_view()),
+                  path("upload/coach/", UploadCoachImage.as_view()),
               ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
